@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>svg-text-to-path</title>
+    <style>
+      .cols { display: flex; flex-flow: row wrap; }
+      .cols__item { flex-basis: 300px; }
+      .cols__item._svg { flex-grow: 1; max-width: 400px; }
+      pre { max-width: 100vw; overflow: auto; }
+      @media (min-width: 640px) {
+        pre { max-width: calc(95vw - 400px); overflow: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cols">
+      <div class="cols__item _svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 400 300">
+    <style>
+    .world {
+        font-size: 160px;
+        font-family: Tourney;
+        font-weight: 100;
+        font-style: italic;
+    }
+    </style>
+    <text x="200" y="40" fill="#3399cc" style="font-size: 40px; font-family: Bad Script; text-anchor: middle; dominant-baseline: middle">ABPabp123</text>
+    <text x="120" y="150" style="font-size: 80px; font-family: Bad Script">Hello</text>
+    <text class="world" transform="translate(60 280) scale(0.5 1)">world!</text>
+</svg>
+      </div>
+      <div class="cols__item _result">
+        <pre></pre>
+      </div>
+    </div>
+    <button onclick="convert()">Convert!</button>
+    <script src="svg-text-to-path.js"></script>
+    <script>
+      updateCode();
+
+      function updateCode() {
+        document.querySelector('pre').textContent = document.querySelector('svg').outerHTML;
+      }
+
+      function convert() {
+        SvgTextToPath.replaceAll(document.querySelector('svg'), {
+          handlers: [SvgTextToPath.handlers.map, SvgTextToPath.handlers.google],
+          googleApiKey: 'AIzaSyARQXIjJQWsiLhig8beiRQwTUDe85WQZvY'
+        })
+          .then(function() {
+            updateCode();
+          });
+      }
+    </script>
+  </body>
+</html>

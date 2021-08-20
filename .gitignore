@@ -1,0 +1,21 @@
+# phpstorm project files
+.idea
+
+# windows thumbnail cache
+Thumbs.db
+
+# npm
+/node_modules
+
+# bower
+/bower_components
+
+# composer vendor dir
+/vendor
+
+# composer itself is not needed
+composer.phar
+composer.lock
+
+# Mac DS_Store Files
+.DS_Store
