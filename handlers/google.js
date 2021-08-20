@@ -32,7 +32,7 @@ export default async function(style, params) {
     } else {
         mod = `${wght}${ital ? 'italic' : ''}`;
     }
-    return item.files[mod] || null;
+    return item.files[mod].replace('http://', 'https://') || null;
 }
 
 /**
