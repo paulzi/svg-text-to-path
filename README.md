@@ -1,6 +1,10 @@
 
 # Svg text to path
 
+[![NPM version](http://img.shields.io/npm/v/svg-text-to-path.svg?style=flat)](https://www.npmjs.org/package/svg-text-to-path)
+[![Downloads](https://img.shields.io/npm/dt/svg-text-to-path.svg)](https://www.npmjs.org/package/svg-text-to-path)
+![License](https://img.shields.io/npm/l/svg-text-to-path.svg)
+
 Convert svg <text> nodes to vector font-free <path> elements.
 
 Features:
