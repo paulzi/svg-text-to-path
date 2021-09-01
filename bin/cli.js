@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import minimist from 'minimist';
-import fs from 'fs';
+import { readFileSync, writeFileSync, fsyncSync } from 'fs';
 import { exit, stdout, stdin, stderr } from 'process';
 import { getSvgElement, replaceAll } from '../node.js';
 import mapHandler from '../handlers/map.js';
@@ -9,7 +9,7 @@ import httpHandler from '../handlers/http.js';
 import googleHandler from '../handlers/google.js';
 
 let args = minimist(process.argv.slice(2));
-if (args.help || process.argv.length === 2) {
+if (args.help || (process.argv.length === 2 && stdin.isTTY)) {
     stdout.write(`Usage: svg-text-to-path [options] [input file]
 
 Options:
@@ -74,7 +74,7 @@ try {
     params = Object.fromEntries(params);
 
     if (config) {
-        config = JSON.parse(fs.readFileSync(config));
+        config = JSON.parse(readFileSync(config));
         params = Object.assign(config, params);
     }
 
@@ -89,13 +89,16 @@ try {
     handlers.push(httpHandler);
     params.handlers = handlers;
 
-    let content = fs.readFileSync(stdin.isTTY ? input : stdin.fd);
+    let content = readFileSync(stdin.isTTY ? input : stdin.fd);
     let element = getSvgElement(content);
     let stat = await replaceAll(element, params);
     let outToFile = output || stdout.isTTY;
-    fs.writeFileSync(outToFile ? output || input : stdout.fd, element.outerHTML);
+    writeFileSync(outToFile ? output || input : stdout.fd, element.outerHTML);
     if (outToFile) {
         stdout.write(`Successfuly replaced ${stat.success} of ${stat.total} text nodes\n`);
+    } else {
+        fsyncSync(stdout.fd);
+        fsyncSync(stderr.fd);
     }
     exit(0);
 } catch (e) {
