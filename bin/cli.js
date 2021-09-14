@@ -44,7 +44,7 @@ try {
     let output        = args.o || args['output']         || null;
     let config        = args.c || args['config']         || null;
     let fontsDir      = args.d || args['fonts-dir']      || './fonts'; 
-    let fontsUrl      = args.u || args['fonts-url']      || null
+    let fontsUrl      = args.u || args['fonts-url']      || null;
     let selector      = args.s || args['selector']       || null;
     let merged        = args.m || args['merged']         || null;
     let decimals      = args.p || args['decimals']       || null;
