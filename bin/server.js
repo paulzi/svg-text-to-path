@@ -2,6 +2,7 @@
 import { createServer } from 'http';
 import { URL } from 'url';
 import { exit, stdout, stderr } from 'process';
+import { readFileSync } from 'fs';
 import { replaceAllInString } from '../node.js';
 import mapHandler from '../handlers/map.js';
 import dirHandler from '../handlers/dir.js';
