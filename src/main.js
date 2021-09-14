@@ -138,7 +138,7 @@ export async function getPaths(textNode, params = {}) {
                 y += (font.ascender + font.descender) / font.unitsPerEm * size / 2;
                 break;
         }
-        if (params.merged || false) {
+        if (params.merged) {
             return [font.getPath(text, x, y, size, params)];
         }
         return font.getPaths(text, x, y, size, params);
@@ -170,22 +170,28 @@ export async function replace(textNode, params = {}) {
     if (!paths) {
         return null;
     }
-    let fragment = document.createDocumentFragment();
+    let group;
+    if (!params.group || params.merged) {
+        group = document.createDocumentFragment();
+    } else {
+        group = document.createElementNS(textNode.namespaceURI, 'g');
+        if (params.textAttr) {
+            group.setAttribute(params.textAttr, textNode.textContent);
+        }
+    }
     let result = [];
     paths.forEach(path => {
         let data = path.toPathData(params.decimals || 2);
         let pathNode = document.createElementNS(textNode.namespaceURI, 'path');
-        for (let i = 0, len = textNode.attributes.length; i < len; i++) {
-            let node = textNode.attributes[i];
-            if (node.name !== 'x' && node.name !== 'y') {
-                pathNode.setAttribute(node.name, node.value);
-            }
-        }
+        copyAttributes(textNode, pathNode, ['x', 'y']);
         pathNode.setAttribute('d', data);
-        fragment.appendChild(pathNode);
+        if (params.textAttr && params.merged) {
+            pathNode.setAttribute(params.textAttr, textNode.textContent);
+        }
+        group.appendChild(pathNode);
         result.push(pathNode);
     });
-    textNode.parentNode.replaceChild(fragment, textNode);
+    textNode.parentNode.replaceChild(group, textNode);
     return result;
 }
 
@@ -242,4 +248,19 @@ async function loadFont(style, params) {
 function getFontKey(style) {
     let {family, wght = 400, ital = 0} = style;
     return [family, wght, ital].join('/');
+}
+
+/**
+ * Copy all attributes
+ * @param {SVGElement} source
+ * @param {SVGElement} target
+ * @param {String[]} [except]
+ */
+function copyAttributes(source, target, except) {
+    for (let i = 0, len = source.attributes.length; i < len; i++) {
+        let node = source.attributes[i];
+        if (!except || except.indexOf(node.name) === -1) {
+            target.setAttribute(node.name, node.value);
+        }
+    }
 }

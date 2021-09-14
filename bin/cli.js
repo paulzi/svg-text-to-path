@@ -19,6 +19,7 @@ Options:
   -u, --fonts-url       url to web repository of fonts (dir structure: ./[family]/[wght][?i].[otf|ttf])
   -s, --selector        css selector for find and replace <text> nodes
   -m, --merged          merge each text node in single path
+  -r, --group           use group <g> tag for each text (ignored if merged)
   -p, --decimals        decimal places in <path> coordinates
   -t, --strict          stop process with error on missed fonts
   -z, --default-font    font for replace missed fonts (format: "family:wght:ital")
@@ -27,6 +28,7 @@ Options:
   -f, --features        comma separated list og opentype font features (liga, rlig)
   -l, --letter-spacing  letter spacing value
   -g, --google-api-key  google api key for using Google Fonts
+  -a, --text-attr       save text content in attribute
 
 In config file you can specify "fontMap" key:
 "fontMap": {
@@ -47,6 +49,7 @@ try {
     let fontsUrl      = args.u || args['fonts-url']      || null;
     let selector      = args.s || args['selector']       || null;
     let merged        = args.m || args['merged']         || null;
+    let group         = args.r || args['group']          || null;
     let decimals      = args.p || args['decimals']       || null;
     let strict        = args.t || args['strict']         || null;
     let defaultFont   = args.z || args['default-font']   || null;
@@ -55,6 +58,7 @@ try {
     let features      = args.f || args['features']       || null;
     let letterSpacing = args.l || args['letter-spacing'] || null;
     let googleApiKey  = args.g || args['google-api-key'] || null;
+    let textAttr      = args.a || args['text-attr']      || null;
 
     let params = {
         fontsDir,
@@ -62,6 +66,7 @@ try {
         googleApiKey,
         selector,
         merged,
+        group,
         decimals,
         onFontNotFound: strict ? 'error' : null,
         defaultFont: parseFont(defaultFont),
@@ -69,6 +74,7 @@ try {
         hinting,
         features: parseFeatures(features),
         letterSpacing,
+        textAttr,
     };
     params = Object.entries(params).filter(([key, value]) => value !== null);
     params = Object.fromEntries(params);

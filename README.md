@@ -53,6 +53,7 @@ Options:
   -u, --fonts-url       url to web repository of fonts (dir structure: ./[family]/[wght][?i].[otf|ttf])
   -s, --selector        css selector for find and replace <text> nodes
   -m, --merged          merge each text node in single path
+  -r, --group           use group <g> tag for each text (ignored if merged)
   -p, --decimals        decimal places in <path> coordinates
   -t, --strict          stop process with error on missed fonts
   -z, --default-font    font for replace missed fonts (format: "family:wght:ital")
@@ -61,6 +62,7 @@ Options:
   -f, --features        comma separated list og opentype font features (liga, rlig)
   -l, --letter-spacing  letter spacing value
   -g, --google-api-key  google api key for using Google Fonts
+  -a, --text-attr       save text content in attribute
 
 In config file you can specify "fontMap" key:
 "fontMap": {
@@ -93,6 +95,27 @@ SvgTextToPath.replaceAll(document.querySelector('svg'), {
     googleApiKey: '...',
     handlers: [SvgTextToPath.handlers.map, SvgTextToPath.handlers.google],
 });
+```
+
+### Server
+
+Start server:
+
+```bash
+svg-text-to-path-server [configFile]
+```
+
+Config file is the same as for the cli.
+
+Post svg-file to `http://{host}:{port}/?params`, get processed svg in response body. Default port: 10000.
+
+Curl example:
+
+```bash
+curl --header "Content-Type: image/svg+xml" \
+  --request POST \
+  --data-binary "@input.svg" \
+  http://localhost:10000/?googleApiKey=<key>&group=1
 ```
 
 ## Documentation
@@ -138,6 +161,8 @@ Exports:
 - `replace(textNode[, params = {}])` - replace `<text>` with `<path>` element;
     - `textNode {SVGTextElement}` - svg `<text>` element;
     - `params {Object}` - additionaly params;
+        - `group: {Boolean}` - use group `<g>` tag for each text (ignored if merged);
+        - `textAttr: {String}` - save text content in attribute;
         - `decimals: {Number}` - decimal places in `<path>` coordinates;
         - and params from `getPaths()`;
     - `@returns {?SVGPathElement[]}` - return array of `<path>` element or null if font file not found.
