@@ -2,7 +2,7 @@ import { access } from 'fs/promises';
 import { constants } from 'fs';
 import { resolve } from 'path';
 import { cwd } from 'process';
-import { getFontMod } from '../src/main.js';
+import { getFontMod } from '../src/misc.js';
 
 /**
  * Check font file in folder
@@ -11,7 +11,8 @@ import { getFontMod } from '../src/main.js';
  * @param {Number} style.wght
  * @param {Number} style.ital
  * @param {Object} params
- * @returns {?String}
+ * @param {String} params.fontsDir
+ * @returns {Promise<?String>}
  */
 export default async function(style, params) {
     const fontsDir = params.fontsDir;

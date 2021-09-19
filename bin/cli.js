@@ -2,7 +2,7 @@
 import minimist from 'minimist';
 import { readFileSync, writeFileSync, fsyncSync } from 'fs';
 import { exit, stdout, stdin, stderr } from 'process';
-import { getSvgElement, replaceAll } from '../node.js';
+import { getSvgElement, replaceAll, svgToString } from '../node.js';
 import mapHandler from '../handlers/map.js';
 import dirHandler from '../handlers/dir.js';
 import httpHandler from '../handlers/http.js';
@@ -99,7 +99,7 @@ try {
     let element = getSvgElement(content);
     let stat = await replaceAll(element, params);
     let outToFile = output || stdout.isTTY;
-    writeFileSync(outToFile ? output || input : stdout.fd, element.outerHTML);
+    writeFileSync(outToFile ? output || input : stdout.fd, svgToString(element));
     if (outToFile) {
         stdout.write(`Successfuly replaced ${stat.success} of ${stat.total} text nodes\n`);
     } else {

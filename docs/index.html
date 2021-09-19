@@ -20,15 +20,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 400 300">
     <style>
     .world {
-        font-size: 160px;
+        font-size: 120px;
         font-family: Tourney;
         font-weight: 100;
         font-style: italic;
     }
+    .sample {
+        font-size: 40px;
+    }
     </style>
-    <text x="200" y="40" fill="#3399cc" style="font-size: 40px; font-family: Bad Script; text-anchor: middle; dominant-baseline: middle">ABPabp123</text>
-    <text x="120" y="150" style="font-size: 80px; font-family: Bad Script">Hello</text>
-    <text class="world" transform="translate(60 280) scale(0.5 1)">world!</text>
+    <text x="200" y="40" fill="#3399cc" style="font-size: 30px; font-family: Bad Script; text-anchor: middle; dominant-baseline: middle">ABPabp123</text>
+    <text x="120" y="120" style="font-size: 60px; font-family: 'Bad Script'">Hello</text>
+    <text class="world" transform="translate(60 220) scale(0.5 1)">world!</text>
+    <text x="160" y="250" style="font-size:20px;font-family:'Bad Script';text-anchor: middle;">Tspan <tspan class="sample">sample</tspan>!<tspan x="160" dy="1em" style="fill: #f00; text-anchor: end">q<tspan style="font-size: 30px">werty</tspan></tspan> uiop</text>
 </svg>
       </div>
       <div class="cols__item _result">
@@ -47,7 +51,8 @@
       function convert() {
         SvgTextToPath.replaceAll(document.querySelector('svg'), {
           handlers: [SvgTextToPath.handlers.map, SvgTextToPath.handlers.google],
-          googleApiKey: 'AIzaSyARQXIjJQWsiLhig8beiRQwTUDe85WQZvY'
+          googleApiKey: 'AIzaSyARQXIjJQWsiLhig8beiRQwTUDe85WQZvY',
+          group: true
         })
           .then(function() {
             updateCode();

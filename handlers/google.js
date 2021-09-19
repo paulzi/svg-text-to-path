@@ -1,4 +1,4 @@
-import internal from '../src/internal.js';
+import { fetch } from '../src/shims.js';
 
 let families;
 let loadPromise;
@@ -10,7 +10,8 @@ let loadPromise;
  * @param {Number} style.wght
  * @param {Number} style.ital
  * @param {Object} params
- * @returns {?String}
+ * @param {String} params.googleApiKey
+ * @returns {Promise<?String>}
  */
 export default async function(style, params) {
     if (!families) {
@@ -38,11 +39,11 @@ export default async function(style, params) {
 /**
  * Load family list from google fonts
  * @param {String} apiKey API key
- * @returns {Map<String, Object>} Return promise of Map family name => data
+ * @returns {Promise<Map<String, Object>>} Return promise of Map family name => data
  */
 async function loadFamilies(apiKey) {
     let url = 'https://www.googleapis.com/webfonts/v1/webfonts?sort=popularity&key=' + encodeURIComponent(apiKey);
-    let response = await internal.fetch(url);
+    let response = await fetch(url);
     let data = await response.json();
     let map = new Map();
     data.items.forEach(item => {

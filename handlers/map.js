@@ -1,4 +1,4 @@
-import { getFontMod } from '../src/main.js';
+import { getFontMod } from '../src/misc.js';
 
 /**
  * Get font path/url from map
@@ -7,9 +7,10 @@ import { getFontMod } from '../src/main.js';
  * @param {Number} style.wght
  * @param {Number} style.ital
  * @param {Object} params
+ * @param {Object} params.fontMap
  * @returns {?String}
  */
-export default async function(style, params) {
+export default function(style, params) {
     return params.fontMap
         && params.fontMap[style.family]
         && params.fontMap[style.family][getFontMod(style)]

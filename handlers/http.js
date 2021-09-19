@@ -1,5 +1,5 @@
-import { getFontMod } from '../src/main.js';
-import internal from '../src/internal.js';
+import { getFontMod } from '../src/misc.js';
+import { fetch } from '../src/shims.js';
 
 /**
  * Check font file in web-repository
@@ -8,7 +8,8 @@ import internal from '../src/internal.js';
  * @param {Number} style.wght
  * @param {Number} style.ital
  * @param {Object} params
- * @returns {?String}
+ * @param {String} params.fontsUrl
+ * @returns {Promise<?String>}
  */
 export default async function(style, params) {
     const fontsUrl = params.fontsUrl;
@@ -17,7 +18,7 @@ export default async function(style, params) {
         let promises = [];
         for (let ext of ['ttf', 'otf']) {
             let url = `${fontsUrl}/${style.family}/${mod}.${ext}`;
-            let promise = internal.fetch(url, {method: 'HEAD'})
+            let promise = fetch(url, {method: 'HEAD'})
                 .then(response => {
                     if (response.status !== 200) {
                         throw new Error('');

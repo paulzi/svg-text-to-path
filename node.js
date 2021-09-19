@@ -3,10 +3,12 @@ import { cwd } from 'process';
 import { JSDOM } from 'jsdom';
 import fetch from 'node-fetch';
 import { load, parse } from 'opentype.js';
-import { replaceAll } from './src/main.js';
+import { shims } from './src/shims.js';
+import { replaceAll, svgToString } from './src/main.js';
+import { getNodeStyle } from './src/misc.js';
 import mapHandler from './handlers/map.js';
 import dirHandler from './handlers/dir.js';
-import internal from './src/internal.js';
+export { convertTSpanText } from './src/tspan.js';
 export {
     getFont,
     setFont,
@@ -15,6 +17,7 @@ export {
     getPath,
     replace,
     replaceAll,
+    svgToString,
 } from './src/main.js';
 
 /**
@@ -37,28 +40,21 @@ export function getSvgElement(svg) {
 /**
  * Replace svg <text> nodes in string svg with <path> nodes
  * @param {String} svg
- * @param {Object} params
- * @return {String}
+ * @param {Object} [params]
+ * @return {Promise<String>}
  */
 export async function replaceAllInString(svg, params = {}) {
     let element = getSvgElement(svg);
     await replaceAll(element, params);
-    return element.outerHTML;
+    return svgToString(element);
 }
-
 
 /**
  * Get Font instance by path
- * @param {Object} style
- * @param {String} style.family
- * @param {Number} style.wght
- * @param {Number} style.ital
- * @returns {import('opentype.js').Font}
+ * @param {String} path
+ * @returns {Promise<import('opentype.js').Font>}
  */
 async function getFontInternal(path) {
-    if (path && typeof path === 'object') {
-        return path;
-    }
     if (path.indexOf(':') !== -1) {
         let response = await fetch(path);
         let buffer = await response.arrayBuffer();
@@ -71,6 +67,28 @@ async function getFontInternal(path) {
     }
 }
 
-internal.getFontInternal = getFontInternal;
-internal.fetch = fetch;
-internal.handlers = [mapHandler, dirHandler];
+/**
+ * Get family list for svg node
+ * @param {SVGElement} node 
+ * @param {CSSStyleDeclaration} style 
+ * @param {String} prop
+ */
+function getStyleProp(node, style, prop) {
+    // JSDOM getComputedStyle not inherit for svg nodes
+    do {
+        let result = style[prop];
+        if (result) {
+            return result;
+        }
+        node = node.parentNode;
+        if (node && node.ownerDocument === null) {
+            node = null;
+        }
+        style = node ? getNodeStyle(node) : null;
+    } while (node);
+}
+
+shims.defaultHandlers = [mapHandler, dirHandler];
+shims.fetch           = fetch;
+shims.getFontInternal = getFontInternal;
+shims.getStyleProp    = getStyleProp;

@@ -1,7 +1,8 @@
 import { load } from 'opentype.js';
+import { shims } from './src/shims.js';
+import { replaceAll, svgToString } from './src/main.js';
 import mapHandler from './handlers/map.js';
-import internal from './src/internal.js';
-import { replaceAll } from './src/main.js';
+export { convertTSpanText } from './src/tspan.js';
 export {
     getFont,
     setFont,
@@ -10,6 +11,7 @@ export {
     getPath,
     replace,
     replaceAll,
+    svgToString,
 } from './src/main.js';
 
 /**
@@ -27,31 +29,33 @@ export function getSvgElement(svg) {
  * Replace svg <text> nodes in string svg with <path> nodes
  * @param {String} svg
  * @param {Object} [params]
- * @return {String}
+ * @return {Promise<String>}
  */
 export async function replaceAllInString(svg, params = {}) {
     let element = getSvgElement(svg);
     await replaceAll(element, params);
-    return element.outerHTML;
+    return svgToString(element);
 }
 
 /**
  * Get Font instance by path
- * @param {Object} style
- * @param {String} style.family
- * @param {Number} style.wght
- * @param {Number} style.ital
- * @returns {import('opentype.js').Font}
+ * @param {String} path
+ * @returns {Promise<import('opentype.js').Font>}
  */
 async function getFontInternal(path) {
-    if (path && typeof path === 'object') {
-        return path;
-    }
     return await load(path);
 }
 
-internal.getFontInternal = getFontInternal;
-internal.fetch = function(...args) {
-    return window.fetch(...args);
-};
-internal.handlers = [mapHandler];
+/**
+ * Get family list for svg node
+ * @param {SVGElement} node 
+ * @param {CSSStyleDeclaration} style 
+ */
+function getStyleProp(node, style, prop) {
+    return style[prop];
+}
+
+shims.defaultHandlers = [mapHandler];
+shims.fetch           = (...args) => window.fetch(...args);
+shims.getFontInternal = getFontInternal;
+shims.getStyleProp    = getStyleProp;

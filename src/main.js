@@ -1,4 +1,6 @@
-import internal from './internal.js';
+import { getDefaultHandlers, getFontInternal, getStyleProp } from './shims.js';
+import { copyAttributes, getNodeStyle, createElementFrom } from './misc.js';
+import { convertTSpanText } from './tspan.js';
 
 // CSS font-weight to wght map
 const wghtMap = {
@@ -16,25 +18,14 @@ const italMap = {
 let fonts = new Map();
 
 /**
- * Return string representation of font style
- * @param {Object} style
- * @param {String} style.family
- * @param {Number} style.wght
- * @param {Number} style.ital
- * @returns {String}
- */
-export function getFontMod(style) {
-    return [style.wgth || 400, style.ital ? 'i' : ''].join('');
-}
-
-/**
  * Get Font instance for font style
  * @param {Object} style
  * @param {String} style.family
  * @param {Number} style.wght
  * @param {Number} style.ital
  * @param {Object} [params]
- * @returns {import('opentype.js').Font}
+ * @param {Function[]} [params.handlers]
+ * @returns {Promise<import('opentype.js').Font>}
  */
 export async function getFont(style, params = {}) {
     let key = getFontKey(style);
@@ -62,25 +53,26 @@ export async function getFont(style, params = {}) {
  * @param {Number} style.ital
  * @param {import('opentype.js').Font} font 
  */
-export async function setFont(style, font) {
+export function setFont(style, font) {
     fonts.set(getFontKey(style), font);
 }
 
 /**
- * Get opentype.js Font instance for svg <text> node
- * @param {SVGTextElement} textNode 
+ * Get opentype.js Font instance for svg <text> or <tspan> node
+ * @param {SVGTextElement|SVGTSpanElement} textNode 
  * @param {Object} [params]
  * @param {String|Function} [params.onFontNotFound]
  * @param {Object} [params.defaultFont]
- * @returns {{font: null|import('opentype.js').Font, fontStyle: Object, style: Object}}
+ * @returns {Promise<{font: null|import('opentype.js').Font, fontStyle: Object, style: CSSStyleDeclaration}>}
  */
 export async function getFontForNode(textNode, params = {}) {
-    const document = textNode.ownerDocument;
-    const getComputedStyle = document.defaultView.getComputedStyle;
-    let style = getComputedStyle(textNode);
-    let familyList = style.fontFamily.split(',').map(name => name.trim().replace(/^"|"$/g, ''));
-    let wght = wghtMap[style.fontWeight] || parseInt(style.fontWeight) || 400;
-    let ital = italMap[style.fontStyle] || 0;
+    let style = getNodeStyle(textNode);
+    let familyList = getStyleProp(textNode, style, 'fontFamily');
+    let wght       = getStyleProp(textNode, style, 'fontWeight');
+    let ital       = getStyleProp(textNode, style, 'fontStyle');
+    familyList = familyList.split(',').map(name => name.trim().replace(/^"|"$/g, ''));
+    wght       = wghtMap[wght] || parseInt(wght) || 400;
+    ital       = italMap[ital] || 0;
     let font, family;
     for (let item of familyList) {
         font = font || await getFont({family: item, wght, ital}, params);
@@ -101,21 +93,21 @@ export async function getFontForNode(textNode, params = {}) {
 }
 
 /**
- * Get opentype.js Path instances for svg <text> node
+ * Get opentype.js Path instances for svg <text> node (<tspan> not support there)
  * @param {SVGTextElement} textNode
  * @param {Object} [params]
  * @param {Boolean} [params.merged]
- * @returns {null|import('opentype.js').Path[]}
+ * @returns {Promise<?import('opentype.js').Path[]>}
  */
 export async function getPaths(textNode, params = {}) {
     let {font, style} = await getFontForNode(textNode, params);
     if (font) {
         let text = textNode.textContent;
-        let x    = parseFloat(textNode.getAttributeNS(null, 'x')) || 0;
-        let y    = parseFloat(textNode.getAttributeNS(null, 'y')) || 0;
-        let size = parseInt(style.fontSize) || 0;
-        let alignX = style.textAnchor;
-        let alignY = style.dominantBaseline;
+        let x    = parseFloat(textNode.getAttributeNS(null, 'x'))        || 0;
+        let y    = parseFloat(textNode.getAttributeNS(null, 'y'))        || 0;
+        let size = parseFloat(getStyleProp(textNode, style, 'fontSize')) || 0;
+        let alignX = getStyleProp(textNode, style, 'textAnchor');
+        let alignY = getStyleProp(textNode, style, 'dominantBaseline');
         switch (alignX) {
             case 'middle':
                 x -= font.getAdvanceWidth(text, size, params) / 2;
@@ -147,12 +139,12 @@ export async function getPaths(textNode, params = {}) {
 }
 
 /**
- * Get opentype.js Path instance for svg <text> node
+ * Get opentype.js Path instance for svg <text> node (<tspan> not support there)
  * @param {SVGTextElement} textNode
- * @param {Object} params
- * @returns {null|import('opentype.js').Path}
+ * @param {Object} [params]
+ * @returns {Promise<?import('opentype.js').Path>}
  */
-export async function getPath(textNode, params) {
+export async function getPath(textNode, params = {}) {
     let paths = await getPaths(textNode, Object.assign({merged: true}, params));
     return paths ? paths[0] : null;
 }
@@ -161,46 +153,38 @@ export async function getPath(textNode, params) {
  * Replace svg <text> node with <path> node
  * @param {SVGTextElement} textNode
  * @param {Object} [params]
+ * @param {Boolean} [params.group]
+ * @param {String} [params.textAttr]
  * @param {Number} [params.decimals]
- * @returns {?SVGPathElement[]}
+ * @returns {Promise<SVGPathElement|SVGPathElement[]|SVGGElement|null>}
  */
 export async function replace(textNode, params = {}) {
-    const document = textNode.ownerDocument;
-    let paths = await getPaths(textNode, params);
-    if (!paths) {
-        return null;
-    }
     let group;
-    if (!params.group || params.merged) {
-        group = document.createDocumentFragment();
+    if (textNode.querySelector('tspan')) {
+        group = await convertTSpanText(textNode, params);
+        textNode.parentNode.replaceChild(group, textNode);
+        
+        let promises = [];
+        group.querySelectorAll('text').forEach(node => {
+            let promise = replaceTextNode(node, params);
+            promises.push(promise);
+        });
+        await Promise.all(promises);
     } else {
-        group = document.createElementNS(textNode.namespaceURI, 'g');
-        if (params.textAttr) {
-            group.setAttribute(params.textAttr, textNode.textContent);
-        }
+        group = await replaceTextNode(textNode, params)
     }
-    let result = [];
-    paths.forEach(path => {
-        let data = path.toPathData(params.decimals || 2);
-        let pathNode = document.createElementNS(textNode.namespaceURI, 'path');
-        copyAttributes(textNode, pathNode, ['x', 'y']);
-        pathNode.setAttribute('d', data);
-        if (params.textAttr && params.merged) {
-            pathNode.setAttribute(params.textAttr, textNode.textContent);
-        }
-        group.appendChild(pathNode);
-        result.push(pathNode);
-    });
-    textNode.parentNode.replaceChild(group, textNode);
-    return result;
+    if (group && params.textAttr && !Array.isArray(group)) {
+        group.setAttributeNS(null, params.textAttr, textNode.innerHTML);
+    }
+    return group;
 }
 
 /**
- * Replace svg <text> nodes in svg element with <path> nodes
- * @param {SVGTextElement} textNode
+ * Replace `<text>` elements in `<svg>`
+ * @param {SVGSVGElement} svgElement
  * @param {Object} [params]
  * @param {String} [params.selector]
- * @returns {{total: Number, success: Number}}
+ * @returns {Promise<{total: Number, success: Number}>}
  */
 export async function replaceAll(svgElement, params = {}) {
     const nodes = svgElement.querySelectorAll(params.selector || 'text');
@@ -219,6 +203,16 @@ export async function replaceAll(svgElement, params = {}) {
 }
 
 /**
+ * Convert SVG element to string
+ * @param {SVGSVGElement} svgElement 
+ * @returns {String}
+ */
+export function svgToString(svgElement) {
+    let serializer = new svgElement.ownerDocument.defaultView.XMLSerializer();
+    return serializer.serializeToString(svgElement);
+}
+
+/**
  * Low-level load Font instance
  * @param {Object} style
  * @param {String} style.family
@@ -230,11 +224,14 @@ export async function replaceAll(svgElement, params = {}) {
  */
 async function loadFont(style, params) {
     let path;
-    let handlers = params.handlers || internal.handlers;
+    let handlers = params.handlers || getDefaultHandlers();
     for (let handler of handlers) {
         path = path || await handler(style, params);
     }
-    return path ? await internal.getFontInternal(path, params) : null;
+    if (!path || typeof path === 'object') {
+        return path || null;
+    }
+    return await getFontInternal(path);
 }
 
 /**
@@ -251,16 +248,41 @@ function getFontKey(style) {
 }
 
 /**
- * Copy all attributes
- * @param {SVGElement} source
- * @param {SVGElement} target
- * @param {String[]} [except]
+ * Replace svg <text> node with <path> node (<tspan> not support there)
+ * @param {SVGTextElement} textNode
+ * @param {Object} [params]
+ * @param {Boolean} [params.group]
+ * @param {Number} [params.decimals]
+ * @returns {Promise<SVGPathElement|SVGPathElement[]|SVGGElement|null>}
  */
-function copyAttributes(source, target, except) {
-    for (let i = 0, len = source.attributes.length; i < len; i++) {
-        let node = source.attributes[i];
-        if (!except || except.indexOf(node.name) === -1) {
-            target.setAttribute(node.name, node.value);
+async function replaceTextNode(textNode, params = {}) {
+    const document = textNode.ownerDocument;
+    let paths = await getPaths(textNode, params);
+    if (!paths) {
+        return null;
+    }
+    let group;
+    if (!params.group || params.merged) {
+        group = document.createDocumentFragment();
+    } else {
+        group = createElementFrom('g', textNode);
+        copyAttributes(textNode, group, ['x', 'y']);
+    }
+    let result = [];
+    paths.forEach(path => {
+        let data = path.toPathData(params.decimals || 2);
+        let pathNode = createElementFrom('path', textNode);
+        if (!params.group || params.merged) {
+            copyAttributes(textNode, pathNode, ['x', 'y']);
         }
+        pathNode.setAttribute('d', data);
+        group.appendChild(pathNode);
+        result.push(pathNode);
+    });
+    textNode.parentNode.replaceChild(group, textNode);
+    if (params.merged) {
+        return result[0];
+    } else {
+        return params.group ? group : result;
     }
 }
