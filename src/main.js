@@ -273,7 +273,14 @@ async function replaceTextNode(textNode, params = {}) {
         let data = path.toPathData(params.decimals || 2);
         let pathNode = createElementFrom('path', textNode);
         if (!params.group || params.merged) {
-            copyAttributes(textNode, pathNode, ['x', 'y']);
+            copyAttributes(textNode, pathNode, [
+                'x', 
+                'y', 
+                'font-family', 
+                'font-weight', 
+                'font-style',
+                'font-size',
+            ]);
         }
         pathNode.setAttribute('d', data);
         group.appendChild(pathNode);
