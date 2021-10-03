@@ -67,9 +67,9 @@ export function setFont(style, font) {
  */
 export async function getFontForNode(textNode, params = {}) {
     let style = getNodeStyle(textNode);
-    let familyList = getStyleProp(textNode, style, 'fontFamily');
-    let wght       = getStyleProp(textNode, style, 'fontWeight');
-    let ital       = getStyleProp(textNode, style, 'fontStyle');
+    let familyList = textNode.getAttributeNS(null, 'font-family') ?? getStyleProp(textNode, style, 'fontFamily');
+    let wght       = textNode.getAttributeNS(null, 'font-weight') ?? getStyleProp(textNode, style, 'fontWeight');
+    let ital       = textNode.getAttributeNS(null, 'font-style') ?? getStyleProp(textNode, style, 'fontStyle');
     familyList = familyList.split(',').map(name => name.trim().replace(/^"|"$/g, ''));
     wght       = wghtMap[wght] || parseInt(wght) || 400;
     ital       = italMap[ital] || 0;
@@ -105,7 +105,7 @@ export async function getPaths(textNode, params = {}) {
         let text = textNode.textContent;
         let x    = parseFloat(textNode.getAttributeNS(null, 'x'))        || 0;
         let y    = parseFloat(textNode.getAttributeNS(null, 'y'))        || 0;
-        let size = parseFloat(getStyleProp(textNode, style, 'fontSize')) || 0;
+        let size = parseFloat(textNode.getAttributeNS(null, 'font-size') ?? getStyleProp(textNode, style, 'fontSize')) || 0;
         let alignX = getStyleProp(textNode, style, 'textAnchor');
         let alignY = getStyleProp(textNode, style, 'dominantBaseline');
         switch (alignX) {
