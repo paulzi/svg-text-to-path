@@ -75,17 +75,24 @@ async function getFontInternal(path) {
  */
 function getStyleProp(node, style, prop) {
     // JSDOM getComputedStyle not inherit for svg nodes
+    let cur = node;
     do {
         let result = style[prop];
         if (result) {
             return result;
+        } else if (cur === node) {
+            let attr = prop.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
+            result = node.getAttributeNS(null, attr);
+            if (result) {
+                return result;
+            }
         }
-        node = node.parentNode;
-        if (node && node.ownerDocument === null) {
-            node = null;
+        cur = cur.parentNode;
+        if (cur && cur.ownerDocument === null) {
+            cur = null;
         }
-        style = node ? getNodeStyle(node) : null;
-    } while (node);
+        style = cur ? getNodeStyle(cur) : null;
+    } while (cur);
 }
 
 shims.defaultHandlers = [mapHandler, dirHandler];
