@@ -105,15 +105,24 @@ export async function getPaths(textNode, params = {}) {
         let text = textNode.textContent;
         let x    = parseFloat(textNode.getAttributeNS(null, 'x'))        || 0;
         let y    = parseFloat(textNode.getAttributeNS(null, 'y'))        || 0;
-        let size = parseFloat(getStyleProp(textNode, style, 'fontSize')) || 0;
-        let alignX = getStyleProp(textNode, style, 'textAnchor');
-        let alignY = getStyleProp(textNode, style, 'dominantBaseline');
+        let size          = parseFloat(getStyleProp(textNode, style, 'fontSize'))      || 0;
+        let letterSpacing = parseFloat(getStyleProp(textNode, style, 'letterSpacing')) || 0;
+        let alignX        = getStyleProp(textNode, style, 'textAnchor');
+        let alignY        = getStyleProp(textNode, style, 'dominantBaseline');
+        let alignY2       = getStyleProp(textNode, style, 'alignmentBaseline');
+        if (alignY2 !== 'auto' && alignY === 'auto') {
+            alignY = alignY2;
+        }
+        let lParams = Object.assign({}, params);
+        if (letterSpacing && size) {
+            lParams.letterSpacing = letterSpacing / size;
+        }
         switch (alignX) {
             case 'middle':
-                x -= font.getAdvanceWidth(text, size, params) / 2;
+                x -= font.getAdvanceWidth(text, size, lParams) / 2;
                 break;
             case 'end':
-                x -= font.getAdvanceWidth(text, size, params);
+                x -= font.getAdvanceWidth(text, size, lParams);
                 break;
         }
         switch (alignY) {
@@ -131,9 +140,9 @@ export async function getPaths(textNode, params = {}) {
                 break;
         }
         if (params.merged) {
-            return [font.getPath(text, x, y, size, params)];
+            return [font.getPath(text, x, y, size, lParams)];
         }
-        return font.getPaths(text, x, y, size, params);
+        return font.getPaths(text, x, y, size, lParams);
     }
     return null;
 }
