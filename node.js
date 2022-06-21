@@ -95,7 +95,17 @@ function getStyleProp(node, style, prop) {
     } while (cur);
 }
 
+/**
+ * Get XMLSerializer instance
+ * @param {SVGSVGElement} svgNode
+ * @returns {XMLSerializer}
+ */
+function makeSerializer(svgNode) {
+    return new svgNode.ownerDocument.defaultView.XMLSerializer();
+}
+
 shims.defaultHandlers = [mapHandler, dirHandler];
 shims.fetch           = fetch;
 shims.getFontInternal = getFontInternal;
 shims.getStyleProp    = getStyleProp;
+shims.makeSerializer  = makeSerializer;

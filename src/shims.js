@@ -39,3 +39,12 @@ export async function getFontInternal(path) {
 export function getStyleProp(node, style, prop) {
     return shims.getStyleProp(node, style, prop);
 }
+
+/**
+ * Get XMLSerializer instance
+ * @param {SVGSVGElement} svgNode
+ * @returns {XMLSerializer}
+ */
+export function makeSerializer(svgNode) {
+    return shims.makeSerializer(svgNode);
+}

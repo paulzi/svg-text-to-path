@@ -33,7 +33,22 @@ export function getSvgElement(svg) {
  */
 export async function replaceAllInString(svg, params = {}) {
     let element = getSvgElement(svg);
-    await replaceAll(element, params);
+    let doc = element.ownerDocument;
+    let div;
+    if (!doc.defaultView) {
+        div = document.createElement('div');
+        div.style.display = 'none';
+        document.body.appendChild(div);
+        div.appendChild(doc.documentElement);
+    }
+    try {
+        await replaceAll(element, params);
+    } finally {
+        if (div) {
+            doc.appendChild(div.firstChild);
+            div.parentElement.removeChild(div);
+        }
+    }
     return svgToString(element);
 }
 
@@ -55,7 +70,18 @@ function getStyleProp(node, style, prop) {
     return style[prop];
 }
 
+/**
+ * Get XMLSerializer instance
+ * @param {SVGSVGElement} svgNode
+ * @returns {XMLSerializer}
+ */
+function makeSerializer(svgNode) {
+    let win = svgNode.ownerDocument.defaultView || window;
+    return new win.XMLSerializer();
+}
+
 shims.defaultHandlers = [mapHandler];
 shims.fetch           = (...args) => window.fetch(...args);
 shims.getFontInternal = getFontInternal;
 shims.getStyleProp    = getStyleProp;
+shims.makeSerializer  = makeSerializer;

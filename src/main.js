@@ -1,4 +1,4 @@
-import { getDefaultHandlers, getFontInternal, getStyleProp } from './shims.js';
+import { getDefaultHandlers, getFontInternal, getStyleProp, makeSerializer } from './shims.js';
 import { copyAttributes, getNodeStyle, createElementFrom } from './misc.js';
 import { convertTSpanText } from './tspan.js';
 
@@ -217,7 +217,7 @@ export async function replaceAll(svgElement, params = {}) {
  * @returns {String}
  */
 export function svgToString(svgElement) {
-    let serializer = new svgElement.ownerDocument.defaultView.XMLSerializer();
+    let serializer = makeSerializer(svgElement);
     return serializer.serializeToString(svgElement);
 }
 
