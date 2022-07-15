@@ -70,7 +70,7 @@ export async function getFontForNode(textNode, params = {}) {
     let familyList = getStyleProp(textNode, style, 'fontFamily') ?? '';
     let wght       = getStyleProp(textNode, style, 'fontWeight');
     let ital       = getStyleProp(textNode, style, 'fontStyle');
-    familyList = familyList.split(',').map(name => name.trim().replace(/^"|"$/g, ''));
+    familyList = familyList.split(',').map(name => name.trim().replace(/^"|"$|^'|'$/g, ''));
     wght       = wghtMap[wght] || parseInt(wght) || 400;
     ital       = italMap[ital] || 0;
     let font, family;
