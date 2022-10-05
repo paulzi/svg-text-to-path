@@ -113,7 +113,7 @@ try {
 }
 
 /**
- * @param {Syting} value
+ * @param {String} value
  * @returns {Object}
  */
 function parseFont(value) {
@@ -127,7 +127,7 @@ function parseFont(value) {
 }
 
 /**
- * @param {Syting} value
+ * @param {String} value
  * @returns {Object}
  */
 function parseFeatures(value) {
@@ -135,6 +135,7 @@ function parseFeatures(value) {
         return null;
     }
     return value.split(',').reduce((acc, cur) => {
-        acc[cur.trim] = true;
+        acc[cur.trim()] = true;
+        return acc;
     }, {});
 }
