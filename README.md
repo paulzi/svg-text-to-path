@@ -108,3 +108,9 @@ curl --header "Content-Type: image/svg+xml" \
 ## Documentation
 
 [Read full documentation](https://github.com/paulzi/svg-text-to-path/blob/master/documentation.md)
+
+## Donation
+
+Send me a donation for project development:
+
+https://pay.cloudtips.ru/p/0b408436
