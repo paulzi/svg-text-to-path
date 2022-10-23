@@ -3,7 +3,8 @@ import ESLintPlugin from 'eslint-webpack-plugin';
 
 export default {
     entry: {
-        'svg-text-to-path': './src/dist.js',
+        'svg-text-to-path-fontkit':    './entries/build-fontkit.js',
+        'svg-text-to-path-opentypejs': './entries/build-opentypejs.js',
     },
     stats: {
         modules: false,

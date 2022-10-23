@@ -3,149 +3,229 @@
 
 SVG text to path documentation.
 
+## Providers and renderers
+
+When converting text, the library tries to find a font for each char in `font-family` list. To get font sources,
+requests are made to font providers. Providers are passed in parameter `providers`. If no providers are found, they will
+be created from static property `Session.defaultProviders` and passed parameters (`fontsUrl`, `useFontFace`, ...).
+
+The library implements two dependencies for rendering glyphs from a font: `fontkint` and `opentype.js`. The renderer to
+use is passed in parameter `renderer`. If not specified, it is taken from static property `Session.defaultRenderer`.
+
+Advantages and disadvantages `fontkit` renderer:
+
+- supports variable fonts;
+- supports `woff`/`woff2` fonts;
+- supports most features of fonts (`smcp`, `onum`, ...), `opentype.js` only supports `liga` and `rlig`;
+- but the disadvantage is that the bundle weighs two times more.
+
+Availability of provider list and renderers depends on the import method.
+
+## Import variants
+
+### Node.js
+
+If using nodejs runtime just import default export of library.
+All providers and renderers are available in static properties.
+
+```javascript
+import Session from 'svg-text-to-path';
+
+console.log(Session.providers); // {ConfigProvider, FontFaceProvider, DirProvider, HttpProvider, GoogleProvider}
+console.log(Session.renderers); // {FontkitFont, OpenTypeJsFont}
+```
+
+### Browser
+
+Default target import includes `fontkit` renderer, and all providers except `DirProvider`:
+
+```javascript
+import Session from 'svg-text-to-path';
+import Session from 'svg-text-to-path/entries/browser-fontkit.js'; // is equal to previous
+
+console.log(Session.providers); // {ConfigProvider, FontFaceProvider, HttpProvider, GoogleProvider}
+console.log(Session.renderers); // {FontkitFont}
+```
+
+`Opentype.js` variant:
+
+```javascript
+import Session from 'svg-text-to-path/entries/browser-opentypejs.js';
+
+console.log(Session.providers); // {ConfigProvider, FontFaceProvider, HttpProvider, GoogleProvider}
+console.log(Session.renderers); // {OpenTypeJsFont}
+```
+
+If you want to build the bundle as light as possible and only import certain providers, use their own import:
+
+```javascript
+import Session from 'svg-text-to-path/entries/browser.js';
+import OpenTypeJsFont from 'svg-text-to-path/renderer/OpenTypeJsFont.js';
+import ConfigProvider from 'svg-text-to-path/providers/config/ConfigProvider.js';
+
+Session.defaultRenderer = OpenTypeJsFont;
+Session.defaultProviders = [ConfigProvider];
+```
+
+You can also import in page already compiled bundles:
+
+```html
+<script src="`dist/svg-text-to-path-fontkit.js"></script> <!-- with `fontkit` renderer variant -->
+<script src="`dist/svg-text-to-path-opentypejs.js"></script> <!-- with `opentype.js` renderer variant -->
+```
+
+And use `window.SvgTextToPath` object:
+
+```javascript
+console.log(window.SvgTextToPath);
+console.log(SvgTextToPath.providers); // {ConfigProvider, FontFaceProvider, HttpProvider, GoogleProvider}
+console.log(SvgTextToPath.renderers); // {FontkitFont/OpenTypeJsFont}
+```
+
+## Session config
+
+- `renderer {Font}` - font rendering class;
+- `providers {FontsProvider[]}` - font providers;
+- `fontCache {Cache}` - font cache storage (can be created via `createCache()`);
+- `familyClasses {{[key: String]: String[]}}` - dictionary of family categories (sans-serif, serif, ...) and corresponding array of families;
+- `fallbackFamilies {String[]}` - array of fallback families (if no suitable font is found);
+- `fallbackGlyph {[String, String|Number]}` - if no glyphs are found for a character in font-family list and `fallbackFamilies`, using family and codepoint or char for replace this glyph;
+- `noFontAction {String}` - if the font for the char is not found, and fallback glyph is not set: `'skipNode'` - skip this `<text>` node, `'error'` - stop processing file and throw error, another values - skip char;
+- `split {Boolean}` - split each glyph in separate path;
+- `decimals {Number}` - decimal places in `<path>` coordinates (default: 2);
+- `textAttr {String}` - save text content to attribute;
+- `keepFontAttrs {Boolean}` - keep font representation attributes (`font-size`, `letter-spacing`, ...);
+- `stat {Boolean|String}` - only for CLI and Server app, for CLI save statistics to json file (or output if `true`), for Server save stat to `X-Svg-Text-To-Path` header;
+- `selector {String}` - only for CLI and Server app, specify css selector for find and replace `<text>` nodes (default: 'text');
+- `port {Number}` - only for Server app, specify server port (default: 10000);
+- `fonts {FontSourceMap}` - dictionary of array of font source (static create `ConfigProvider`);
+- `useFontFace {Boolean}` - enable parsing @font-face css rules to find paths to fonts (static create `FontFaceProvider`);
+- `fontsDir {String}` - path to fonts dir, dir structure variants: static fonts (`./[family]/[wght][?i].[otf|ttf|woff|woff2]`), variable fonts (`./[family]/[axis],[from][?..to];[axis],[from][?..to].[otf|ttf|woff|woff2]`) (static create `DirProvider`);
+- `fontsDirCache {Number}` - time to cache `DirProvider` (default: 0) (static create `DirProvider`);
+- `fontsUrl {String}` - font repository URL, two options are possible: if placeholder "--family--" is present, then the repository will be loaded for each family, web service should return an array of font source objects, otherwise, one request is used, in response must be a dictionary of array of font source (static create `HttpProvider`);
+- `fontsUrlCache {String}` - time to cache `HttpProvider` (default: 600000) (static create `HttpProvider`);
+- `googleApiKey {String}` - Google Fonts API Key (static create `GoogleProvider`);
+- `googleCache {String}` - time to cache `GoogleProvider` (default: 600000) (static create `GoogleProvider`);
+
+
 ## Exports
 
-- `getFont(style[, params = {}])` - get Font instance for font style;
-    - `style {Object}` - object represent font style;
-        - `family {String}` - family name;
-        - `wght {Number}` - font weight;
-        - `ital {Number}` - font italic style (0 or 1);
-    - `params {Object}` - additional params;
-        - `handlers {Function[]}` - array of font source handlers (see handlers);
-    - `@returns {Promise<import('opentype.js').Font>}` - opentype.js Font object or null if font file not found.
-
-- `setFont(style, font)` - set font in internal font cache;
-    - `style {Object}` - font style object (see more `getFont()`);
-    - `font {import('opentype.js').Font}` - opentype.js Font object.
-
-- `getFontForNode(textNode[, params = {}])` - get opentype.js Font instance for svg <text> or <tspan> node;
-    - `textNode {SVGTextElement|SVGTSpanElement}` - svg `<text>` or `<tspan>` element;
-    - `params {Object}` - additionaly params;
-        - `onFontNotFound: {String|Function}` - handler on missed fonts, if `'error'` - stop process with error;
-        - `defaultFont: {Object}` - default font style replace for missed fonts (see `getFont()`);
-        - and params from `getFont()`;
-    - `@returns {Promise<Object>}` - opentype.js Font object or null if font file not found;
-        - `font {import('opentype.js').Font}` - opentype.js Font object or null if font file not found;
-        - `fontStyle {Object}` - font style object (see more getFont());
-        - `style {CSSStyleDeclaration}` - current style for element.
-
-- `getPaths(textNode[, params = {}])` - get opentype.js Path objects from `<text>` element (separated glyphs, `<tspan>` not support there);
-    - `textNode {SVGTextElement}` - svg `<text>` element;
-    - `params {Object}` - additionaly params;
-        - `merged {Boolean}` - use single path for all glyph;
-        - and params from `getFontForNode()`;
-    - `@returns {Promise<?import('opentype.js').Path[]>}` - array of opentype.js Path objects or null if font file not found.
-
-- `getPath(textNode[, params = {}])` - get opentype.js Path objects from `<text>` element (merged glyphs, `<tspan>` not support there);
-    - `textNode {SVGTextElement}` - svg `<text>` element;
-    - `params {Object}` - additionaly params (see `getPaths()`);
-    - `@returns {Promise<?import('opentype.js').Path>}` - opentype.js Path object or null if font file not found.
-
-- `replace(textNode[, params = {}])` - replace `<text>` with `<path>` element;
-    - `textNode {SVGTextElement}` - svg `<text>` element;
-    - `params {Object}` - additionaly params;
-        - `group: {Boolean}` - use group `<g>` tag for each text (ignored if merged);
-        - `textAttr: {String}` - save `<text>` innerHTML to attribute;
-        - `decimals: {Number}` - decimal places in `<path>` coordinates;
-        - and params from `getPaths()`;
-    - `@returns {Promise<SVGPathElement|SVGPathElement[]|SVGGElement|null>}` - return `<g>` if `<text>` has `<tspan>`, `<path>` if `merged` is true, `<g>` if `group` is true, otherwise array of `<path>`.
-
-- `replaceAll(svgElement[, params = {}])` - replace `<text>` elements in `<svg>`;
-    - `svgElement {SVGSVGElement}` - `<svg>` element;
-    - `params {Object}` - additionaly params;
-        - `selector {String}` - CSS selector for find and replace `<text>` nodes;
-        - and params from `replace()`;
-    - `@returns {Promise<{total: Number, success: Number}>}` - stats object.
-
-- `getSvgElement(svg)` - convert svg from string to DOM element (using jsdom for nodejs);
-    - `svg {String}` - svg string content;
-    - `@returns {SVGSVGElement}` - `<svg>` element.
-
-- `replaceAllInString(svg[, params = {}])` - replace input svg-content string to output string;
-    - `svg {String}` - svg string content;
-    - `params {Object}` - additionaly params (see `replaceAll()`);
-    - `@returns {Promise<String>}` - svg string content with replaced `<text>`.
-
-- `convertTSpanText(textNode[, params = {}])` - convert `<text>` with `<tspan>` to `<g>` with multiple `<text>`;
-    - `textNode {SVGTextElement}` - target text node;
-    - `params {Object}` - additionaly params (see `getFontForNode()`);
-    - `@returns {Promise<SVGGElement>}` - `<g>` element.
-
-## Handlers
-
-### Map handler
-
-Get font url/path fron `fontMap` parameter. Structure of map: `fontMap[family][fontMod]`:
-
+```javascript
+import Session from 'svg-text-to-path';
 ```
-"fontMap": {
-    "Roboto": {
-        "400": "fonts/roboto-400.ttf",
-        "400i": "http://example.com/roboto/400i.ttf"
-    }
+
+- `constructor(svg[, params = {}])` - prepare replace session
+    - `svg {SVGSVGElement|String}` - svg node or string (if provide a string in browser, svg node will be appended to document.body);
+    - `params {Object}` - session parameters (see above);
+- `get params()` - return session params;
+- `getSvgString()` - return svg string;
+    - `@returns {String}`;
+- `destroy()` - destroy session (and remove helper svg-nodes from DOM);
+- `getFontStyleForNode(node[, style])` - get `FontStyle` object with families list, variation axes and features;
+    - `node {SVGElement}` - svg element;
+    - `style {CSSStyleDeclaration}` - current computed style;
+    - `@returns {FontStyle}`
+        - `families {String[]}` - families list;
+        - `axes {Object}` - variation dictionary;
+        - `features {Object}` - font features;
+- `replaceAll([selector = 'text'])` - replace all `<text>` in svg;
+    - `selector {String}` - css selector for fint `<text>` elements;
+    - `@returns {Promise<SessionStat>}` - return statistics object;
+- `replace(node)` - replace `<text>` node;
+    - `node {SVGTextElement}` - `<text>` element for replace;
+    - `@returns {Promise<SessionReplaceStat>}` - return statistics object;
+- `createCache(duration)` - create cache object for using in `fontCache` session params;
+    - `duration {Number}` cache duration in ms;
+- `@static defaultRenderer {FontkitFont|OpenTypeJsFont}` - renderer used if `renderer` param is not pass;
+- `@static defaultProviders {FontsProvider[]}` - array of provider class, if `providers` param is not pass;
+- `@static providers {Object}` - dictionary of allowed provider classes;
+- `@static renderers {Object}` - dictionary of allowed renderer classes;
+
+## Providers exports
+
+### ConfigProvider
+
+Get font source objects from config.
+Will be created from `Session.defaultProviders` if parameter `fonts` is passed in session params:
+
+```json
+"fonts": {
+    "Fira Sans": [
+        {
+            "wght": 400,
+            "ital": 0,
+            "source": "../fonts/Fira Sans/400.ttf"
+        }
+    ],
+    "Tourney": [
+        {
+            "wdth": [75, 125],
+            "wght": [100, 900],
+            "source": "../fonts/Tourney/Tourney-Variable.ttf"
+        }
+    ]
 }
 ```
 
 ```javascript
-import mapHandler from 'svg-text-to-path/handlers/map.js';
+import ConfigProvider from 'svg-text-to-path/providers/config/ConfigProvider.js';
 ```
 
-Exports:
+- `constructor(map)`;
+    - `map {Object}` - font source dictionary;
 
-- `default(style, params)` - handler;
-    - `style {Object}` - font style object (see `getFont()`);
-    - `params {Object}` - additionaly params;
-        - `fontMap {Object}` - font map structure;
-    - `@returns {?String}` - string url/path or null.
+### DirProvider
 
-### Dir handler
+Find font in directory. Only for Node.js runtime. Directory structure variants:
 
-Find font in dir `fontsDir`. Directory structure: `./[family]/[wght][?i].[otf|ttf]`.
+- static fonts:   `./[family]/[wght][?i].[otf|ttf|woff|woff2]`
+- variable fonts: `./[family]/[axis],[from][?..to];[axis],[from][?..to].[otf|ttf|woff|woff2]`
+
+Will be created from `Session.defaultProviders` if parameter `fontsDir` is passed in session params.
+Also can use `fontsDirCache` for specify cache duration.
 
 ```javascript
-import dirHandler from 'svg-text-to-path/handlers/dir.js';
+import DirProvider from 'svg-text-to-path/providers/dir/DirProvider.js';
 ```
 
-Exports:
+- `constructor(dir[, cache = 0])`;
+    - `dir {String}` - directory path;
+    - `cache {Number}` - time to cache;
 
-- `default(style, params)` - handler;
-    - `style {Object}` - font style object (see `getFont()`);
-    - `params {Object}` - additionaly params;
-        - `fontsDir {String}` - path to dir;
-    - `@returns {Promise<?String>}` - string path or null if font not found.
+### HttpProvider
 
-### Http handler
+Makes a request for a list of available families and variants.
 
-Find font in web repository `fontsUrl`. Directory structure: `./[family]/[wght][?i].[otf|ttf]`.
+If repository url contains `--family--` substring, then the provider will make request for each family.
+Response must be dictionary of font source object (see ConfigProvider), or array of source object
+(if `--family--` substring used).
 
-For finding font, handler make HEAD requests.
+Will be created from `Session.defaultProviders` if parameter `fontsUrl` is passed in session params.
+Also can use `fontsUrlCache` for specify cache duration.
 
 ```javascript
-import httpHandler from 'svg-text-to-path/handlers/http.js';
+import HttpProvider from 'svg-text-to-path/providers/http/HttpProvider.js';
 ```
 
-Exports:
+- `constructor(repoUrl[, cache])`;
+    - `repoUrl {String}` - repository url;
+    - `cache {Number}` - time to cache (default cache - 600000ms);
 
-- `default(style, params)` - handler;
-    - `style {Object}` - font style object (see `getFont()`);
-    - `params {Object}` - additionaly params;
-        - `fontsUrl {String}` - url of repository;
-    - `@returns {Promise<?String>}` - string path or null if font not found.
-
-### Google handler
+### GoogleProvider
 
 Find font in Google Fonts repository. You must provide API key in `googleApiKey`.
 
 For information on how to get the API key, see https://developers.google.com/fonts/docs/developer_api .
 
+Note: Google Fonts API does not currently support variable fonts.
+
+Will be created from `Session.defaultProviders` if parameter `googleApiKey` is passed in session params.
+Also can use `googleCache` for specify cache duration.
+
 ```javascript
-import googleHandler from 'svg-text-to-path/handlers/google.js';
+import GoogleProvider from 'svg-text-to-path/providers/google/GoogleProvider.js';
 ```
 
-Exports:
-
-- `default(style, params)` - handler;
-    - `style {Object}` - font style object (see `getFont()`);
-    - `params {Object}` - additionaly params;
-        - `googleApiKey {String}` - Google Fonts API key;
-    - `@returns {Promise<?String>}` - string path or null if font not found.
+- `constructor(apiKey[, cache])`;
+    - `apiKey {String}` - google fonts api key;
+    - `cache {Number}` - time to cache (default cache - 600000ms);

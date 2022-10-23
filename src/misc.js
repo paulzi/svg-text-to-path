@@ -1,17 +1,5 @@
 /**
- * Return string representation of font style
- * @param {Object} style
- * @param {String} style.family
- * @param {Number} style.wght
- * @param {Number} style.ital
- * @returns {String}
- */
-export function getFontMod(style) {
-    return [style.wgth || 400, style.ital ? 'i' : ''].join('');
-}
-
-/**
- * Copy all attributes
+ * Copy all attributes from one node to another
  * @param {SVGElement} source
  * @param {SVGElement} target
  * @param {String[]} [except]
@@ -19,9 +7,15 @@ export function getFontMod(style) {
 export function copyAttributes(source, target, except) {
     for (let i = 0, len = source.attributes.length; i < len; i++) {
         let node = source.attributes[i];
-        if (!except || except.indexOf(node.name) === -1) {
-            target.setAttribute(node.name, node.value);
+        let attr = node.name;
+        let pass = true;
+        for (let item of except || []) {
+            if (item === attr || (item.test && item.test(attr))) {
+                pass = false;
+                break;
+            }
         }
+        pass && target.setAttribute(attr, node.value);
     }
 }
 
@@ -37,11 +31,22 @@ export function getNodeStyle(node) {
 }
 
 /**
- * Create element from another
- * @param {String} tag 
- * @param {SVGElement} node 
+ * Create element from another element
+ * @param {String} tag
+ * @param {SVGElement} node
  */
 export function createElementFrom(tag, node) {
     const document = node.ownerDocument;
     return document.createElementNS(node.namespaceURI, tag);
+}
+
+/**
+ * Apply map of promise to promise result
+ * @param {Map<*, Promise>} map 
+ */
+export async function applyPromiseMap(map) {
+    await Promise.all(map.values());
+    for (let [key, promise] of map.entries()) {
+        map.set(key, await promise);
+    }
 }

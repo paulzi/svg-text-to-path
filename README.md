@@ -9,12 +9,18 @@ Convert svg <text> nodes to vector font-free <path> elements.
 
 Features:
 
-- support otf/ttf fonts;
+- supports `<tspan>`;
+- supports multiple values of attributes `x`, `y`, `dx`, `dy`;
+- supports CSS `text-anchor` and `dominant-baseline` properties;
+- supports `textLength` and `lengthAdjust`;
+- supports css units (em, rem, %, mm, cm, in, pt, pc, ...);
+- supports variable fonts (include custom axis via `font-variation-settings`);
+- supports open type features via css `font-feature-settings` (`liga`, `smcp` and another)
+- supports otf/ttf/woff/woff2 fonts;
 - integrated with Google Fonts;
-- support `<tspan>`;
-- different fonts library: directory (nodejs), http-repository, map or your own handler;
-- support CSS `text-anchor` and `dominant-baseline` properties;
-- support nodejs and browser runtime;
+- supports various font sources: config, `@font-face`, directory, http-repository or your own handler;
+- supports nodejs and browser runtime;
+- detailed statistics.
 
 [DEMO](https://paulzi.github.io/svg-text-to-path/index.html)
 
@@ -46,56 +52,33 @@ Support pipes:
 cat in.svg | svg-text-to-path [options] >out.svg
 ```
 
-```
-Options:
-  -o, --output          output path (default equal input)
-  -c, --config          path to config file (in JSON format)
-  -d, --fonts-dir       path to fonts dir (dir structure: ./[family]/[wght][?i].[otf|ttf])
-  -u, --fonts-url       url to web repository of fonts (dir structure: ./[family]/[wght][?i].[otf|ttf])
-  -s, --selector        css selector for find and replace <text> nodes
-  -m, --merged          merge each text node in single path
-  -r, --group           use group <g> tag for each text (ignored if merged)
-  -p, --decimals        decimal places in <path> coordinates
-  -t, --strict          stop process with error on missed fonts
-  -z, --default-font    font for replace missed fonts (format: "family:wght:ital")
-  -k, --kerning         enable kerning (default: true)
-  -h, --hinting         enable hinting (default: false)
-  -f, --features        comma separated list og opentype font features (liga, rlig)
-  -l, --letter-spacing  letter spacing value
-  -g, --google-api-key  google api key for using Google Fonts
-  -a, --text-attr       save text content in attribute
+You can see the list of options by typing:
 
-In config file you can specify "fontMap" key:
-"fontMap": {
-    "Roboto": {
-        "400": "fonts/roboto-400.ttf",
-        "400i": "http://example.com/roboto/400i.ttf"
-    }
-}
+```bash
+svg-text-to-path --help
 ```
 
 ### Code
 
-Import required functions from library:
+Import required class from library:
 
 ```javascript
-import { replaceAllInString } from 'svg-text-to-path';
-import mapHandler from 'svg-text-to-path/handlers/map.js';
-import googleHandler from 'svg-text-to-path/handlers/google.js';
+import Session from 'svg-text-to-path';
 
-let out = await replaceAllInString(svg, {
-    googleApiKey: '...',
-    handlers: [mapHandler, googleHandler],
+let session = new Session(svg, {
+  googleApiKey: '...',
 });
+let stat = await session.replaceAll();
+let out  = session.getSvgString();
 ```
 
-Or include `dist/svg-text-to-path.js` and use `window.SvgTextToPath` object:
+Or include `dist/svg-text-to-path-fontkit.js` and use `window.SvgTextToPath` object:
 
 ```javascript
-SvgTextToPath.replaceAll(document.querySelector('svg'), {
-    googleApiKey: '...',
-    handlers: [SvgTextToPath.handlers.map, SvgTextToPath.handlers.google],
+let session = new SvgTextToPath(document.querySelector('svg'), {
+  googleApiKey: '...',
 });
+let stat = await session.replaceAll();
 ```
 
 ### Server
@@ -108,7 +91,9 @@ svg-text-to-path-server [configFile]
 
 Config file is the same as for the cli.
 
-Post svg-file to `http://{host}:{port}/?params`, get processed svg in response body. Default port: 10000.
+Post svg-file to `http://{host}:{port}/?params`, get processed svg in response body.
+Statistics in `X-Svg-Text-To-Path` header (if `stat` parameter enabled).
+Default port: 10000.
 
 Curl example:
 
@@ -116,15 +101,10 @@ Curl example:
 curl --header "Content-Type: image/svg+xml" \
   --request POST \
   --data-binary "@input.svg" \
-  http://localhost:10000/?googleApiKey=<key>&group=1
+  http://localhost:10000/?googleApiKey=...&stat=1
 ```
 
 
 ## Documentation
 
-[Read documentation](https://github.com/paulzi/svg-text-to-path/blob/master/documentation.md)
-
-## Browser support
-
-All modern browsers (IE RIP).
-Nodejs
+[Read full documentation](https://github.com/paulzi/svg-text-to-path/blob/master/documentation.md)
