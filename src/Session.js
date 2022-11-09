@@ -117,7 +117,10 @@ export default class Session {
      * Destroy session and remove temporary SVG (parsed from string) from DOM
      */
     destroy() {
-        this.#fromString && this.#svg.parentNode.removeChild(this.#svg);
+        if (this.#fromString) {
+            const div = this.#svg.parentNode;
+            div && div.parentNode.removeChild(div);
+        }
         this.#svg         = null;
         this.#params      = null;
         this.#fontFactory = null;

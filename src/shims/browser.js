@@ -22,8 +22,10 @@ export async function getBufferFromSource(source) {
 export function parseSvgString(str) {
     const parser = new DOMParser();
     const node = parser.parseFromString(str, 'image/svg+xml').documentElement;
-    node.style.display = 'none';
-    document.body.appendChild(node);
+    const div = document.createElement('div');
+    div.style.display = 'none';
+    div.appendChild(node);
+    document.body.appendChild(div);
     return node;
 }
 
