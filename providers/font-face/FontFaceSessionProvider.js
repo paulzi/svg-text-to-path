@@ -70,7 +70,7 @@ export default class FontFaceSessionProvider extends FontsSessionProvider {
         let family = getProp('font-family').trim().replace(/^"|"$|^'|'$/g, '');
         let source;
         for (let item of getProp('src').split(',')) {
-            let match = item.match(/url\(['"]?([\S^)]+)['"]?\)\s+format\(['"]?([a-z0-9]+)['"]?\)/);
+            let match = item.match(/url\(['"]?(\S+?)['"]?\)\s+format\(['"]?([a-z0-9]+)['"]?\)/);
             if (match) {
                 if (['truetype', 'opentype', 'woff', 'woff2'].includes(match[2])) {
                     source = match[1];
