@@ -1,4 +1,5 @@
 import FontsSessionProvider from '../../src/FontsSessionProvider.js';
+import { fetch } from '../../src/shims/index.js';
 
 /**
  * @typedef {import('../../src/Session.js').default} Session
@@ -32,27 +33,46 @@ export default class FontFaceSessionProvider extends FontsSessionProvider {
      */
     async getVariants(family) {
         if (!this.#data) {
-            this.#parse();
+            await this.#parse();
         }
         return this.#data[family] || [];
     }
 
     /**
+     * @param {String} url 
+     * @returns {Promise}
      */
-    #parse() {
+    async #loadData(url) {
+        let response = await fetch(url);
+        return await response.text();
+    }
+
+
+    /**
+     */
+    async #parse() {
         this.#data = {};
         let styleSheets = this.#session.svg.ownerDocument.styleSheets;
         for (let i = 0, len = styleSheets.length; i < len; i++) {
-            this.#parseStyleSheet(styleSheets[i]);
+            await this.#parseStyleSheet(styleSheets[i]);
         }
     }
 
     /**
      * @param {CSSStyleSheet} styleSheet 
      */
-    #parseStyleSheet(styleSheet) {
+    async #parseStyleSheet(styleSheet) {
         for (let i = 0, len = styleSheet.cssRules.length; i < len; i++) {
             let rule = styleSheet.cssRules[i];
+            if (rule.constructor.name === 'CSSImportRule') {
+                let doc = document.implementation.createHTMLDocument(""),
+                  styleElement = document.createElement("style");
+                await this.#loadData(rule.href).then((css) => {
+                    styleElement.textContent = css;
+                    doc.body.appendChild(styleElement);
+                    this.#parseFontFace(styleElement.sheet);
+                });
+            }
             rule.styleSheet && this.#parseStyleSheet(rule.styleSheet);
             if (rule.constructor.name === 'CSSFontFaceRule') {
                 this.#parseFontFace(rule);
