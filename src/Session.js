@@ -83,7 +83,7 @@ export default class Session {
      */
     constructor(svg, params = {}) {
         this.#fromString  = typeof svg === 'string';
-        this.#svg         = this.#fromString ? parseSvgString(svg) : svg;
+        this.#svg         = this.#fromString ? parseSvgString(svg, params.loadResources) : svg;
         this.#params      = params;
         let providers     = this.#params.providers || this.#createDefaultProviders();
         this.#fontFactory = new FontFactory(this, providers);
@@ -243,6 +243,8 @@ export default class Session {
      * @returns {Promise<SessionReplaceStat>}
      */
     async replace(node) {
+        let loadingPromise = this.#svg._svgTextToPathPromise;
+        loadingPromise && await loadingPromise;
         let textMap  = new Map();
         let missed   = new Map();
         let warnings = new Map();

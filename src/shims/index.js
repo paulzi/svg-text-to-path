@@ -30,10 +30,11 @@ export function getStyleProp(node, style, prop) {
 
 /**
  * @param {String} str 
+ * @param {Boolean} [loadResources]
  * @returns {SVGSVGElement}
  */
-export function parseSvgString(str) {
-    return shims.parseSvgString(str);
+export function parseSvgString(str, loadResources) {
+    return shims.parseSvgString(str, loadResources);
 }
 
 /**

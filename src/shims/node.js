@@ -24,12 +24,15 @@ export async function getBufferFromSource(source) {
 
 /**
  * @param {String} str 
+ * @param {Boolean} [loadResources] 
  * @returns {SVGSVGElement}
  */
-export function parseSvgString(str) {
-    const dom = new JSDOM('<html><body></body></html>', {
-        //resources: "usable" /** @todo */
-    });
+export function parseSvgString(str, loadResources) {
+    let jsdomParams = {};
+    if (loadResources) {
+        jsdomParams.resources = 'usable';
+    }
+    const dom = new JSDOM('<html><body></body></html>', jsdomParams);
     const document = dom.window.document;
     const parser = new dom.window.DOMParser();
     const node = parser.parseFromString(str, 'image/svg+xml').documentElement;
@@ -37,6 +40,11 @@ export function parseSvgString(str) {
     node.querySelectorAll('style').forEach(style => {
         document.head.insertAdjacentHTML('beforeend', style.outerHTML);
     });
+    if (loadResources) {
+        node._svgTextToPathPromise = new Promise(resolve => {
+            document.onload = resolve;
+        });   
+    }
     return node;
 }
 

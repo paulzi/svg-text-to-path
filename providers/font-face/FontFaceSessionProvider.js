@@ -1,4 +1,5 @@
 import FontsSessionProvider from '../../src/FontsSessionProvider.js';
+import { fetch } from '../../src/shims/index.js';
 
 /**
  * @typedef {import('../../src/Session.js').default} Session
@@ -19,6 +20,11 @@ export default class FontFaceSessionProvider extends FontsSessionProvider {
     #data;
 
     /**
+     * @type {Promise}
+     */
+    #promise;
+
+    /**
      * @param {Session} session
      */
     constructor(session) {
@@ -31,28 +37,60 @@ export default class FontFaceSessionProvider extends FontsSessionProvider {
      * @returns {Promise<FontSource[]>}
      */
     async getVariants(family) {
-        if (!this.#data) {
-            this.#parse();
+        if (!this.#promise) {
+            this.#promise = this.#parse();
         }
+        await this.#promise;
         return this.#data[family] || [];
     }
 
     /**
      */
-    #parse() {
+    async #parse() {
         this.#data = {};
         let styleSheets = this.#session.svg.ownerDocument.styleSheets;
+        let promises = [];
         for (let i = 0, len = styleSheets.length; i < len; i++) {
-            this.#parseStyleSheet(styleSheets[i]);
+            promises.push(this.#parseStyleSheet(styleSheets[i]));
         }
+        await Promise.all(promises);
+    }
+
+    /**
+     * @param {String} url 
+     * @returns {CSSStyleSheet}
+     */
+    async #ajaxLoad(url) {
+        let response = await fetch(url);
+        let content = await response.text();
+        let doc = document.implementation.createHTMLDocument();
+        let style = doc.createElement('style');
+        style.textContent = content;
+        document.body.appendChild(style);
+        return style.sheet;
     }
 
     /**
      * @param {CSSStyleSheet} styleSheet 
      */
-    #parseStyleSheet(styleSheet) {
-        for (let i = 0, len = styleSheet.cssRules.length; i < len; i++) {
-            let rule = styleSheet.cssRules[i];
+    async #parseStyleSheet(styleSheet) {
+        let rules;
+        try {
+            rules = styleSheet.cssRules;
+        } catch {
+            if (this.#session.params.useFontFaceAjax) {
+                try {
+                    styleSheet = await this.#ajaxLoad(styleSheet.href);
+                    rules = styleSheet.cssRules;
+                } catch {
+                    rules = [];
+                }
+            } else {
+                rules = [];
+            }
+        }
+        for (let i = 0, len = rules.length; i < len; i++) {
+            let rule = rules[i];
             rule.styleSheet && this.#parseStyleSheet(rule.styleSheet);
             if (rule.constructor.name === 'CSSFontFaceRule') {
                 this.#parseFontFace(rule);

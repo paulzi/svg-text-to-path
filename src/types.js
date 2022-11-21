@@ -57,8 +57,10 @@
  * @property {Number} decimals
  * @property {String} textAttr
  * @property {Boolean} keepFontAttrs
+ * @property {Boolean} loadResources
  * @property {FontSourceMap} fonts
  * @property {Boolean} useFontFace
+ * @property {Boolean} useFontFaceAjax
  * @property {String} fontsDir
  * @property {Number} fontsDirCache
  * @property {String} fontsUrl

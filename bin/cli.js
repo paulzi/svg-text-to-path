@@ -11,6 +11,7 @@ if (args.help || (process.argv.length === 2 && stdin.isTTY)) {
 Options:
   -o, --output              output file, if no file is specified and no pipes are used, the input file will be replaced
   -c, --config              path to config file (in JSON format, keys in camel case)
+  -t, --load-resources      load external resources like <link>
   -p, --use-font-face       parse @font-face css rules to find paths to fonts
   -d, --fonts-dir           path to fonts dir, dir structure variants:
                             static fonts:   ./[family]/[wght][?i].[otf|ttf|woff|woff2]
@@ -65,6 +66,7 @@ try {
     let input            = args._[0];
     let output           = args.o || args['output']            || null;
     let config           = args.c || args['config']            || null;
+    let loadResources    = args.t || args['load-resources']    || null;
     let useFontFace      = args.p || args['use-font-face']     || null; 
     let fontsDir         = args.d || args['fonts-dir']         || './fonts'; 
     let fontsUrl         = args.u || args['fonts-url']         || null;
@@ -81,7 +83,9 @@ try {
     let jsonStat         = args.j || args['stat']              || null;
 
     let params = {
+        loadResources,
         useFontFace,
+        useFontFaceAjax: true,
         fontsDir,
         fontsUrl,
         googleApiKey,

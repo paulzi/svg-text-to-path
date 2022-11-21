@@ -98,8 +98,10 @@ console.log(SvgTextToPath.renderers); // {FontkitFont/OpenTypeJsFont}
 - `stat {Boolean|String}` - only for CLI and Server app, for CLI save statistics to json file (or output if `true`), for Server save stat to `X-Svg-Text-To-Path` header;
 - `selector {String}` - only for CLI and Server app, specify css selector for find and replace `<text>` nodes (default: 'text');
 - `port {Number}` - only for Server app, specify server port (default: 10000);
+- `loadResources {Boolean}` - only for CLI, load external resources in SVG (default: false);
 - `fonts {FontSourceMap}` - dictionary of array of font source (static create `ConfigProvider`);
 - `useFontFace {Boolean}` - enable parsing @font-face css rules to find paths to fonts (static create `FontFaceProvider`);
+- `useFontFaceAjax {Boolean}` - when stylesheet rules are not alllowed due CORS, rules will be load by ajax request (static create `FontFaceProvider`);
 - `fontsDir {String}` - path to fonts dir, dir structure variants: static fonts (`./[family]/[wght][?i].[otf|ttf|woff|woff2]`), variable fonts (`./[family]/[axis],[from][?..to];[axis],[from][?..to].[otf|ttf|woff|woff2]`) (static create `DirProvider`);
 - `fontsDirCache {Number}` - time to cache `DirProvider` (default: 0) (static create `DirProvider`);
 - `fontsUrl {String}` - font repository URL, two options are possible: if placeholder "--family--" is present, then the repository will be loaded for each family, web service should return an array of font source objects, otherwise, one request is used, in response must be a dictionary of array of font source (static create `HttpProvider`);
@@ -173,6 +175,20 @@ import ConfigProvider from 'svg-text-to-path/providers/config/ConfigProvider.js'
 
 - `constructor(map)`;
     - `map {Object}` - font source dictionary;
+
+### FontFaceProvider
+
+Get font source objects from stylesheets `@font-face`.
+Will be created from `Session.defaultProviders` if parameter `useFontFace` is true in session params.
+
+**Warning! if an attempt to get rules from stylesheet fails due to CORS (for example, css from Google Fonts CSS API), then a AJAX-request will be made.**
+**To avoid reloading styles add `crossorigin="anonymous"` to your `<link>` tag.**
+
+```javascript
+import FontFaceProvider from 'svg-text-to-path/providers/font-face/FontFaceProvider.js';
+```
+
+- `constructor()`;
 
 ### DirProvider
 
