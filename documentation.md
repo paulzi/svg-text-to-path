@@ -9,7 +9,7 @@ When converting text, the library tries to find a font for each char in `font-fa
 requests are made to font providers. Providers are passed in parameter `providers`. If no providers are found, they will
 be created from static property `Session.defaultProviders` and passed parameters (`fontsUrl`, `useFontFace`, ...).
 
-The library implements two dependencies for rendering glyphs from a font: `fontkint` and `opentype.js`. The renderer to
+The library implements two dependencies for rendering glyphs from a font: `fontkit` and `opentype.js`. The renderer to
 use is passed in parameter `renderer`. If not specified, it is taken from static property `Session.defaultRenderer`.
 
 Advantages and disadvantages `fontkit` renderer:
