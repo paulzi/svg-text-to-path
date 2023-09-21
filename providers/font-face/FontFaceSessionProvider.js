@@ -107,19 +107,18 @@ export default class FontFaceSessionProvider extends FontsSessionProvider {
         };
         let family = getProp('font-family').trim().replace(/^"|"$|^'|'$/g, '');
         let source;
-        for (let item of getProp('src').split(',')) {
-            let match = item.match(/url\(['"]?(\S+?)['"]?\)\s+format\(['"]?([a-z0-9]+)['"]?\)/);
-            if (match) {
-                if (['truetype', 'opentype', 'woff', 'woff2'].includes(match[2])) {
-                    source = match[1];
-                    break;
-                }
+        let match;
+        let src = getProp('src');
+        let re = /url\(['"]?(\S+?)['"]?\)\s+format\(['"]?([a-z0-9]+)['"]?\)/g;
+        while ((match = re.exec(src)) !== null) {
+            if (['truetype', 'opentype', 'woff', 'woff2'].includes(match[2])) {
+                source = match[1];
+                break;
             }
         }
         if (!source) {
             return;
         }
-        let match;
         let variant = {source};
         match = getProp('font-weight').match(/^([\d.]+)(?:\s+([\d.]+))?$/);
         if (match) {
