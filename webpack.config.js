@@ -1,5 +1,4 @@
 import TerserPlugin from 'terser-webpack-plugin';
-import ESLintPlugin from 'eslint-webpack-plugin';
 
 export default {
     entry: {
@@ -21,22 +20,6 @@ export default {
             }),
         ],
     },
-    plugins: [
-        new ESLintPlugin({
-            files: ['./src'],
-            useEslintrc: false,
-            overrideConfig: {
-                parser: 'babel-eslint',
-                env: {
-                    browser: true,
-                    commonjs: true,
-                    es6: true,
-                    node: true, 
-                },
-                extends: 'eslint:recommended',
-            }
-        }), 
-    ],
     module: {
         rules: [
             {

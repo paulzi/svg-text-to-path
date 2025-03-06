@@ -12,7 +12,7 @@ export {fetch};
  * @param {Promise<ArrayBuffer>}
  */
 export async function getBufferFromSource(source) {
-    if (source.indexOf(':') !== -1) {
+    if (source.indexOf('://') !== -1) {
         let response = await fetch(source);
         return await response.arrayBuffer();
     }
