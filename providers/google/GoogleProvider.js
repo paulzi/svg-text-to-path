@@ -65,6 +65,9 @@ export default class GoogleProvider extends HttpProvider {
                 if (type === 'regular') {
                     wght = 400;
                     ital = 0;
+                } else if (type === 'italic') {
+                    wght = 400;
+                    ital = 1;
                 } else {
                     wght = parseInt(type);
                     ital = type.slice(-6) === 'italic' ? 1 : 0;
