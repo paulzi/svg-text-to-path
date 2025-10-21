@@ -1,6 +1,6 @@
 {
   "name": "svg-text-to-path",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "Convert svg text element to path",
   "main": "entries/node.js",
   "browser": "entries/browser-fontkit.js",
@@ -21,6 +21,7 @@
     "url": "https://github.com/paulzi/svg-text-to-path"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "fontkit": "^2.0.2",
     "jsdom": "^20.0.0",
     "minimist": "^1.2.5",

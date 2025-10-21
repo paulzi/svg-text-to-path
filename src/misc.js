@@ -50,3 +50,13 @@ export async function applyPromiseMap(map) {
         map.set(key, await promise);
     }
 }
+
+/**
+ * Convert mimetype label to encoding name
+ * @param {string} label 
+ * @returns {string}
+ */
+export function labelToName(label) {
+  label = `${label || ""}`.trim().toLowerCase();
+  return labelsToNames[label] || null;
+};

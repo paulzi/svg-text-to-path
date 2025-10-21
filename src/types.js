@@ -7,7 +7,8 @@
 
 /**
  * @typedef {Object} FontSource
- * @property {String} source
+ * @property {String} [source]
+ * @property {Buffer} [data]
  */
 
 /**

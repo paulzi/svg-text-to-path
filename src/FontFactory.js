@@ -112,7 +112,10 @@ export default class FontFactory {
     async loadFontForVariant(family, variant) {
         let renderer = this.#session.params.renderer || Session.defaultRenderer;
         try {
-            let buffer = await getBufferFromSource(variant.source);
+            let buffer = variant.data;
+            if (!buffer) {
+                buffer = await getBufferFromSource(variant.source)
+            }
             return renderer.fontParse(family, variant, buffer);
         } catch {
             return null;

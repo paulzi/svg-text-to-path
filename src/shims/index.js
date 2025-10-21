@@ -7,7 +7,7 @@ export const shims = {};
  * @returns {Promise<Response>}
  */
 export function fetch(input, init) {
-    return shims.fetch(input, init);
+  return shims.fetch(input, init);
 }
 
 /**
@@ -15,26 +15,26 @@ export function fetch(input, init) {
  * @param {Promise<ArrayBuffer>}
  */
 export function getBufferFromSource(source) {
-    return shims.getBufferFromSource(source);
+  return shims.getBufferFromSource(source);
 }
 
 /**
  * Get family list for svg node
- * @param {SVGElement} node 
- * @param {CSSStyleDeclaration} style 
+ * @param {SVGElement} node
+ * @param {CSSStyleDeclaration} style
  * @param {String} prop
  */
 export function getStyleProp(node, style, prop) {
-    return shims.getStyleProp(node, style, prop);
+  return shims.getStyleProp(node, style, prop);
 }
 
 /**
- * @param {String} str 
+ * @param {String} str
  * @param {Boolean} [loadResources]
  * @returns {SVGSVGElement}
  */
 export function parseSvgString(str, loadResources) {
-    return shims.parseSvgString(str, loadResources);
+  return shims.parseSvgString(str, loadResources);
 }
 
 /**
@@ -42,5 +42,5 @@ export function parseSvgString(str, loadResources) {
  * @returns {Number[]}
  */
 export function parseSvgLength(node, prop) {
-    return shims.parseSvgLength(node, prop);
+  return shims.parseSvgLength(node, prop);
 }

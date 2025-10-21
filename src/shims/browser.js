@@ -1,10 +1,6 @@
-/**
- * @param  {...any} args 
- * @returns {Promise<Response>}
- */
-export function fetch(...args) {
-    return window.fetch(...args);
-}
+export { Buffer } from 'buffer/';
+export const fetch = window.fetch;
+export const Blob = window.Blob;
 
 /**
  * @param {String} source
