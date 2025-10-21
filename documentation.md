@@ -169,6 +169,27 @@ Will be created from `Session.defaultProviders` if parameter `fonts` is passed i
 }
 ```
 
+Alternatively, you can also provide font source data in the form of a `Buffer` directly in the configuration:
+
+```javascript
+"fonts": {
+    "Fira Sans": [
+        {
+            "wght": 400,
+            "ital": 0,
+            "data": fs.readFileSync(path.join(__dirname, "../fonts/Fira Sans/400.ttf"))
+        }
+    ],
+    "Tourney": [
+        {
+            "wdth": [75, 125],
+            "wght": [100, 900],
+            "data": fs.readFileSync(path.join(__dirname, "../fonts/Tourney/Tourney-Variable.ttf"))
+        }
+    ]
+}
+```
+
 ```javascript
 import ConfigProvider from 'svg-text-to-path/providers/config/ConfigProvider.js';
 ```
