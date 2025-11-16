@@ -150,13 +150,18 @@ import Session from 'svg-text-to-path';
 Get font source objects from config.
 Will be created from `Session.defaultProviders` if parameter `fonts` is passed in session params:
 
-```json
+```javascript
 "fonts": {
     "Fira Sans": [
         {
             "wght": 400,
             "ital": 0,
             "source": "../fonts/Fira Sans/400.ttf"
+        },
+        {
+            "wght": 400,
+            "ital": 1,
+            "buffer": fs.readFileSync(path.join(__dirname, "../fonts/Fira Sans/400i.ttf"))
         }
     ],
     "Tourney": [

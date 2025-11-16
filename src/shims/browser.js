@@ -1,5 +1,5 @@
 /**
- * @param  {...any} args 
+ * @param {...any} args 
  * @returns {Promise<Response>}
  */
 export function fetch(...args) {
@@ -7,8 +7,15 @@ export function fetch(...args) {
 }
 
 /**
+ * @returns {null}
+ */
+export function base64Prepare() {
+    return null;
+}
+
+/**
  * @param {String} source
- * @param {Promise<Buffer>}
+ * @param {Promise<ArrayBuffer>}
  */
 export async function getBufferFromSource(source) {
     let response = await fetch(source);

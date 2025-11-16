@@ -8,6 +8,7 @@
 /**
  * @typedef {Object} FontSource
  * @property {String} source
+ * @property {Buffer|ArrayBuffer} buffer
  */
 
 /**

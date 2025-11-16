@@ -20,6 +20,7 @@ Features:
 - integrated with Google Fonts;
 - supports various font sources: config, `@font-face`, directory, http-repository or your own handler;
 - supports nodejs and browser runtime;
+- supports base64 css-inline fonts;
 - detailed statistics.
 
 [DEMO](https://paulzi.github.io/svg-text-to-path/index.html)
@@ -108,9 +109,3 @@ curl --header "Content-Type: image/svg+xml" \
 ## Documentation
 
 [Read full documentation](https://github.com/paulzi/svg-text-to-path/blob/master/documentation.md)
-
-## Donation
-
-Send me a donation for project development:
-
-https://pay.cloudtips.ru/p/0b408436

@@ -11,8 +11,16 @@ export function fetch(input, init) {
 }
 
 /**
+ * @param {string} source
+ * @returns {?Buffer}
+ */
+export function base64Prepare(source) {
+    return shims.base64Prepare(source);
+}
+
+/**
  * @param {String} source
- * @param {Promise<ArrayBuffer>}
+ * @param {Promise<Buffer|ArrayBuffer>}
  */
 export function getBufferFromSource(source) {
     return shims.getBufferFromSource(source);
@@ -20,8 +28,8 @@ export function getBufferFromSource(source) {
 
 /**
  * Get family list for svg node
- * @param {SVGElement} node 
- * @param {CSSStyleDeclaration} style 
+ * @param {SVGElement} node
+ * @param {CSSStyleDeclaration} style
  * @param {String} prop
  */
 export function getStyleProp(node, style, prop) {
@@ -29,7 +37,7 @@ export function getStyleProp(node, style, prop) {
 }
 
 /**
- * @param {String} str 
+ * @param {String} str
  * @param {Boolean} [loadResources]
  * @returns {SVGSVGElement}
  */

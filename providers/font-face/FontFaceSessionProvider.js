@@ -1,5 +1,5 @@
 import FontsSessionProvider from '../../src/FontsSessionProvider.js';
-import { fetch } from '../../src/shims/index.js';
+import { fetch, base64Prepare } from '../../src/shims/index.js';
 
 /**
  * @typedef {import('../../src/Session.js').default} Session
@@ -119,7 +119,8 @@ export default class FontFaceSessionProvider extends FontsSessionProvider {
         if (!source) {
             return;
         }
-        let variant = {source};
+        let buffer = base64Prepare(source);
+        let variant = buffer ? {buffer} : {source};
         match = getProp('font-weight').match(/^([\d.]+)(?:\s+([\d.]+))?$/);
         if (match) {
             match = match.slice(1).filter(v => v).map(parseFloat);

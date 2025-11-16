@@ -8,8 +8,20 @@ import { getNodeStyle } from '../misc.js';
 export {fetch};
 
 /**
+ * @param {string} source
+ * @returns {?Buffer|?ArrayBuffer}
+ */
+export function base64Prepare(source) {
+    if (source.slice(0, 5) === 'data:') {
+        let match = source.match(/^data:.+\/(.+);base64,(.*)$/);
+        return Buffer.from(match[2], 'base64');
+    }
+    return null;
+}
+
+/**
  * @param {String} source
- * @param {Promise<ArrayBuffer>}
+ * @param {Promise<Buffer|ArrayBuffer>}
  */
 export async function getBufferFromSource(source) {
     if (source.indexOf('://') !== -1) {
